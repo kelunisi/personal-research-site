@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智脑 · 个人研究站</title>
+  <meta
+    name="description"
+    content="标准化实践 × 多 Agent 协作 × 个人知识系统——一个标准化工作者的个人研究站。"
+  />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+  <!-- 粘性玻璃导航 -->
+  <header class="site-nav" id="siteNav">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="回到顶部">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <circle cx="8" cy="9" r="3" />
+          <circle cx="24" cy="7" r="2.4" />
+          <circle cx="16" cy="20" r="3.4" />
+          <circle cx="26" cy="25" r="2" />
+          <path d="M10.4 10.8 13.6 17.4M22.4 8.9 18 17.2M19.2 21.4 24.2 24.1M22.9 9.3 10.9 9.7" />
+        </svg>
+        <span data-brand>智脑 · 个人研究站</span>
+      </a>
+      <nav class="nav-links" id="navLinks" aria-label="主导航"><!-- 由 script.js 渲染 --></nav>
+      <button
+        class="nav-toggle"
+        id="navToggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="navLinks"
+        aria-label="打开菜单"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- 首屏 -->
+    <section class="hero" id="top">
+      <canvas id="starCanvas" class="hero-canvas" aria-hidden="true"></canvas>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-eyebrow" data-hero-eyebrow></p>
+        <h1 class="hero-title" data-hero-title></h1>
+        <p class="hero-intro" data-hero-intro></p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#research" data-cta-primary></a>
+          <a class="btn btn-ghost" href="#timeline" data-cta-secondary></a>
+        </div>
+        <dl class="hero-stats" data-hero-stats><!-- 由 script.js 渲染 --></dl>
+      </div>
+    </section>
+
+    <!-- 研究成果 -->
+    <section class="section" id="research" aria-labelledby="researchTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">Research</p>
+        <h2 id="researchTitle">研究成果</h2>
+        <p class="section-desc">
+          已经完成并整理成文档的研究记录，以及接下来想做的方向。真实成果与预留方向在视觉上一眼可辨。
+        </p>
+      </div>
+      <div class="card-grid" data-research-cards><!-- 由 script.js 渲染 --></div>
+      <h3 class="subhead reveal">预留方向</h3>
+      <div class="card-grid card-grid-reserved" data-research-reserved><!-- 由 script.js 渲染 --></div>
+    </section>
+
+    <!-- 研究框架 -->
+    <section class="section" id="framework" aria-labelledby="frameworkTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">Method</p>
+        <h2 id="frameworkTitle">研究框架</h2>
+        <p class="section-desc">
+          “智脑”方法的工作方式：外部资料进入共享底座，经过整理与沉淀，成为可以被共享的成果。
+        </p>
+      </div>
+      <div class="flow reveal" data-framework-flow aria-label="智脑方法流程示意"><!-- 由 script.js 渲染 --></div>
+      <div class="principle-grid" data-framework-principles><!-- 由 script.js 渲染 --></div>
+    </section>
+
+    <!-- 未来实验 / 路线图 -->
+    <section class="section" id="roadmap" aria-labelledby="roadmapTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">Roadmap</p>
+        <h2 id="roadmapTitle">未来实验</h2>
+        <p class="section-desc">想做的事情先放在这里，全部处于待启动或规划阶段，做成之后会移入研究成果。</p>
+      </div>
+      <div class="roadmap-grid" data-roadmap><!-- 由 script.js 渲染 --></div>
+    </section>
+
+    <!-- 更新动态 -->
+    <section class="section" id="timeline" aria-labelledby="timelineTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">Changelog</p>
+        <h2 id="timelineTitle">更新动态</h2>
+        <p class="section-desc">个人站与智脑架构的演进记录。</p>
+      </div>
+      <ol class="timeline" data-timeline><!-- 由 script.js 渲染 --></ol>
+    </section>
+
+    <!-- 关于我 -->
+    <section class="section" id="about" aria-labelledby="aboutTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">About</p>
+        <h2 id="aboutTitle">关于我</h2>
+      </div>
+      <div class="about-panel reveal" data-about><!-- 由 script.js 渲染 --></div>
+    </section>
+
+    <!-- 支持我 -->
+    <section class="section" id="support" aria-labelledby="supportTitle">
+      <div class="section-head reveal">
+        <p class="section-kicker">Support</p>
+        <h2 id="supportTitle">支持我</h2>
+        <p class="section-desc" data-support-intro></p>
+      </div>
+      <div class="support-panel reveal">
+        <div class="support-tabs" role="tablist" aria-label="支付方式" data-support-tabs><!-- 由 script.js 渲染 --></div>
+        <div class="support-body" id="support-panel" role="tabpanel" data-support-body><!-- 由 script.js 渲染 --></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p><span data-brand>智脑 · 个人研究站</span> · <span data-footer-note></span></p>
+    <p class="footer-year">© 2026</p>
+  </footer>
+
+  <noscript>
+    <p class="noscript-note">本站需要启用 JavaScript 才能完整显示研究成果与动态。</p>
+  </noscript>
+
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

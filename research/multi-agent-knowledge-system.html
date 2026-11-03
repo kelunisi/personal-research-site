@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智脑架构时间线｜多 Agent 共编的个人知识系统</title>
+  <style>
+    :root {
+      --ink: #183042;
+      --muted: #607182;
+      --paper: #f4f6f8;
+      --card: #ffffff;
+      --line: #dce4e9;
+      --navy: #102d3d;
+      --teal: #137c73;
+      --teal-soft: #e5f3f0;
+      --blue: #3b678d;
+      --blue-soft: #eaf0f6;
+      --gold: #a96d18;
+      --gold-soft: #fff3dc;
+      --rose: #a44f54;
+      --rose-soft: #faecec;
+      --shadow: 0 12px 34px rgba(24, 48, 66, 0.07);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif; line-height: 1.7; }
+    a { color: inherit; }
+    button { font: inherit; }
+    .wrap { width: min(1200px, calc(100% - 40px)); margin: 0 auto; }
+    .hero { color: #fff; background: radial-gradient(circle at 88% 10%, rgba(69,181,164,.22), transparent 30%), radial-gradient(circle at 8% 90%, rgba(108,151,190,.18), transparent 32%), linear-gradient(135deg,#0d2838,#173e4c); padding: 46px 0 32px; }
+    .eyebrow { color: #9fe0d3; font-size: 13px; font-weight: 700; letter-spacing: .15em; }
+    h1 { margin: 10px 0 0; font-size: clamp(30px,5vw,50px); line-height: 1.2; letter-spacing: -.03em; }
+    .hero-sub { margin: 13px 0 0; color: #d8e5e9; font-size: 18px; }
+    .hero-note { max-width: 920px; margin: 18px 0 0; color: #edf5f6; font-size: 15px; }
+    .hero-status { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .hero-status span { padding: 6px 11px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.06); color: #e8f3f2; font-size: 12px; }
+
+    .timeline-shell { position: sticky; top: 0; z-index: 20; padding: 12px 0; background: rgba(244,246,248,.96); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px); }
+    .timeline-title { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+    .version-tabs { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 9px; }
+    .version-tab { min-width: 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .16s, background .16s, transform .16s; }
+    .version-tab:hover { border-color: #8ebdb4; transform: translateY(-1px); }
+    .version-tab:focus-visible { outline: 3px solid rgba(19,124,115,.25); outline-offset: 2px; }
+    .version-tab[aria-selected="true"] { border-color: var(--teal); background: var(--teal-soft); box-shadow: inset 0 0 0 1px var(--teal); }
+    .version-tab .date { display: block; color: var(--teal); font: 700 11px/1.2 ui-monospace, Consolas, monospace; }
+    .version-tab .name { display: block; margin-top: 6px; font-size: 13px; font-weight: 700; line-height: 1.4; }
+    .version-tab .summary { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .version-tab .state { display: inline-block; margin-top: 7px; padding: 1px 7px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: 10px; font-weight: 700; }
+    .version-tab.current .state { background: var(--teal); color: #fff; }
+    .version-tab.proposal .state { background: var(--gold-soft); color: var(--gold); }
+
+    main { padding: 28px 0 56px; }
+    .version-panel[hidden] { display: none; }
+    .version-panel { animation: enter .22s ease-out; }
+    @keyframes enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .version-head { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(145deg,#fff,#edf6f3); box-shadow: var(--shadow); }
+    .version-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); font-size: 12px; font-weight: 700; }
+    .badge.blue { background: var(--blue-soft); color: var(--blue); }
+    .badge.gold { background: var(--gold-soft); color: var(--gold); }
+    .badge.rose { background: var(--rose-soft); color: var(--rose); }
+    .version-head h2 { margin: 0; font-size: clamp(24px,3vw,32px); line-height: 1.35; }
+    .version-head p { margin: 9px 0 0; color: var(--muted); }
+    .content-section { margin-top: 28px; }
+    .content-section > h3 { margin-bottom: 12px; font-size: 20px; }
+    .content-section > h3 .no { margin-right: 9px; color: var(--teal); font: 700 12px/1 ui-monospace, Consolas, monospace; }
+    h4 { margin: 0 0 7px; font-size: 16px; }
+    p { margin: 7px 0; }
+    .card { padding: 20px; border: 1px solid var(--line); border-radius: 15px; background: var(--card); box-shadow: var(--shadow); }
+    .grid { display: grid; gap: 14px; }
+    .two { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .four { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .small { color: var(--muted); font-size: 13px; }
+    .strong { font-weight: 700; color: var(--ink); }
+    .callout { margin-top: 14px; padding: 14px 17px; border-left: 4px solid var(--teal); border-radius: 0 12px 12px 0; background: var(--teal-soft); color: #214e4b; }
+    .callout.gold { border-color: var(--gold); background: var(--gold-soft); color: #694815; }
+    .callout.rose { border-color: var(--rose); background: var(--rose-soft); color: #713b40; }
+    .clean { list-style: none; padding: 0; margin: 8px 0 0; }
+    .clean li { position: relative; padding-left: 16px; }
+    .clean li + li { margin-top: 5px; }
+    .clean li::before { content: ""; position: absolute; left: 0; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
+    .tag { display: inline-block; margin-bottom: 8px; color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+    .flow { display: flex; align-items: stretch; gap: 8px; }
+    .flow .step { flex: 1; display: grid; place-items: center; min-height: 76px; padding: 11px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: center; font-size: 13px; }
+    .flow .arrow { align-self: center; color: var(--teal); font-size: 21px; }
+    .flow.vertical { flex-direction: column; }
+    .flow.vertical .arrow { text-align: center; transform: rotate(90deg); }
+    .node-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .node { padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; text-align: center; }
+    .node b { display: block; }
+    .node span { display: block; color: var(--muted); font-size: 12px; }
+    .node.dark { border-color: var(--navy); background: var(--navy); color: #fff; }
+    .node.dark span { color: #d6e4e8; }
+    .node.green { border-color: #88bdb2; background: var(--teal-soft); }
+    .node.gold { border-color: #dfbb80; background: var(--gold-soft); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th,td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #edf2f4; color: #294757; font-size: 12px; }
+    tr:last-child td { border-bottom: 0; }
+    code { padding: 2px 5px; border-radius: 5px; background: #edf2f4; color: #254a5a; font-family: ui-monospace, Consolas, monospace; font-size: .9em; }
+    pre { margin: 0; padding: 20px; overflow: auto; border-radius: 14px; background: #102b3a; color: #dcebef; font: 12px/1.75 ui-monospace, "Cascadia Code", Consolas, monospace; }
+    .status { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .status.yes { background: var(--teal-soft); color: var(--teal); }
+    .status.no { background: var(--rose-soft); color: var(--rose); }
+    .status.partial { background: var(--gold-soft); color: var(--gold); }
+    .split { display: grid; grid-template-columns: 1fr 58px 1fr; gap: 14px; align-items: center; }
+    .split .approx { color: var(--gold); text-align: center; font-size: 27px; font-weight: 700; }
+    .split .approx span { display: block; font-size: 11px; }
+    .version-footer { display: flex; justify-content: space-between; gap: 10px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    footer { padding: 25px 0 34px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    footer a { color: var(--teal); }
+    noscript { display: block; padding: 20px; color: var(--rose); }
+
+    @media (max-width: 980px) {
+      .version-tabs { display: flex; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
+      .version-tab { min-width: 205px; scroll-snap-align: start; }
+      .four { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .three { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width: 680px) {
+      .wrap { width: min(100% - 24px,1200px); }
+      .hero { padding-top: 32px; }
+      .timeline-title { display: block; }
+      .timeline-title span { display: block; }
+      .version-tabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; }
+      .version-tab { min-width: 0; }
+      .two,.three,.four,.node-row { grid-template-columns: 1fr; }
+      .flow { flex-direction: column; }
+      .flow .arrow { text-align: center; transform: rotate(90deg); }
+      .split { grid-template-columns: 1fr; }
+      .version-head { padding: 19px; }
+      .version-footer { flex-direction: column; }
+      .card { padding: 17px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .timeline-shell { position: static; }
+      .version-tabs,.timeline-title { display: none; }
+      .version-panel[hidden] { display: block; }
+      .version-panel { break-before: page; animation: none; }
+      .version-panel:first-of-type { break-before: auto; }
+      .card,.table-wrap,.version-head { box-shadow: none; }
+      .content-section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">智脑 · 架构时间线</div>
+      <h1>多 Agent 共编的个人知识系统</h1>
+      <p class="hero-sub">按日期与简介选择架构版本，在下方阅读当时的完整思路</p>
+      <p class="hero-note">这里保留架构如何一步步形成：从 LLM Wiki 与个人偏好，到自动知识循环、全局无感入口，再到当前工作交接与 Agent 能力网络。历史方案、当前默认和未来建议始终分开标注。</p>
+      <div class="hero-status"><span>当前默认：V2.0 工作交接＋Agent 能力网络</span><span>下一步：真实新会话与跨 Agent 验证</span><span>本地单文件 · 离线可用</span></div>
+    </div>
+  </header>
+
+  <div class="timeline-shell">
+    <div class="wrap">
+      <div class="timeline-title"><span>选择架构版本 · 左右方向键也可切换</span><span>默认展示当前采用方案</span></div>
+      <div class="version-tabs" role="tablist" aria-label="智脑架构版本时间线">
+        <button class="version-tab" id="tab-v1-0" role="tab" aria-selected="false" aria-controls="v1-0" tabindex="-1" data-target="v1-0" data-short="初始共编架构">
+          <span class="date">2026-11-01 · V1.0</span><span class="name">初始共编架构</span><span class="summary">个人模型、单页偏好、分层索引</span><span class="state">历史方案</span>
+        </button>
+        <button class="version-tab" id="tab-v1-1" role="tab" aria-selected="false" aria-controls="v1-1" tabindex="-1" data-target="v1-1" data-short="Skills 与全量备份">
+          <span class="date">2026-11-02 · V1.1</span><span class="name">Skills 与全量备份</span><span class="summary">六个中文命令、整个工作区备份</span><span class="state">历史方案</span>
+        </button>
+        <button class="version-tab" id="tab-v1-2" role="tab" aria-selected="false" aria-controls="v1-2" tabindex="-1" data-target="v1-2" data-short="对话级自动循环">
+          <span class="date">2026-11-02 · V1.2</span><span class="name">对话级自动循环</span><span class="summary">总览必读、自动检索、选择性沉淀</span><span class="state">历史方案</span>
+        </button>
+        <button class="version-tab" id="tab-v1-3" role="tab" aria-selected="false" aria-controls="v1-3" tabindex="-1" data-target="v1-3" data-short="全局无感智脑">
+          <span class="date">2026-11-02 · V1.3</span><span class="name">全局无感智脑</span><span class="summary">每个对话默认有大脑，保留显式控制</span><span class="state">历史方案</span>
+        </button>
+        <button class="version-tab current" id="tab-v2-0" role="tab" aria-selected="true" aria-controls="v2-0" tabindex="0" data-target="v2-0" data-short="工作交接与能力网络">
+          <span class="date">2026-11-02 · V2.0</span><span class="name">工作交接与能力网络</span><span class="summary">当前工作、Agent 私有 Skill、中文化</span><span class="state">当前默认</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <noscript>请启用浏览器 JavaScript 以切换架构版本。打印时可在打印样式中展开全部版本。</noscript>
+
+  <main class="wrap" id="version-detail">
+    <article class="version-panel" id="v1-0" role="tabpanel" aria-labelledby="tab-v1-0" hidden>
+      <div class="version-head">
+        <div class="version-meta"><span class="badge blue">2026-11-01</span><span class="badge">V1.0 · 历史方案</span></div>
+        <h2>初始共编架构：让知识和偏好一起复利</h2>
+        <p>在现有 Obsidian 库中建立受控的“智脑”区域。Kimi Code、DSH / Kimi、DSH / DeepSeek 与你共同读写同一套 Markdown，而不是一个主 Agent 加若干只读助手。</p>
+      </div>
+
+      <section class="content-section">
+        <h3><span class="no">01</span>核心角色与共同底座</h3>
+        <div class="grid four">
+          <div class="card"><span class="tag">KIMI CODE</span><h4>知识编译与维护者</h4><p class="small">阅读资料、检索、创建和修改页面、建立链接、检查一致性。</p></div>
+          <div class="card"><span class="tag">LLM WIKI</span><h4>运行机制</h4><p class="small">不是另一个软件，而是入库、查询、学习和维护的方法。</p></div>
+          <div class="card"><span class="tag">OBSIDIAN</span><h4>人与知识的界面</h4><p class="small">阅读、审阅、双链、图谱和人工修改。</p></div>
+          <div class="card"><span class="tag">GITHUB</span><h4>私有备份</h4><p class="small">保存规则与知识，不作为日常运行时数据库。</p></div>
+        </div>
+        <div class="callout"><span class="strong">共同写日记：</span>每个 Agent 都能阅读、理解并修改其他 Agent 的内容。没有主从、没有上下文包、没有各自的私有知识副本。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">02</span>四类资产</h3>
+        <div class="grid four">
+          <div class="card"><h4>raw / 外部原始资料</h4><p class="small">网页、论文、报告等来源，归档后原则上不修改，用于事实核查。</p></div>
+          <div class="card"><h4>wiki / 编译知识</h4><p class="small">来源、概念、实体和综合页。新资料必须检查对旧知识的影响。</p></div>
+          <div class="card"><h4>me / 个人模型</h4><p class="small">个人背景、协作偏好和任务标准分开维护。</p></div>
+          <div class="card"><h4>system / 运行规则</h4><p class="small">共编规则、模板、索引、工作流和日志。</p></div>
+        </div>
+        <div class="callout gold"><span class="strong">生长不等于堆积：</span>新增、重写、合并、限定和淘汰都是生长，目标是当前理解更准确，而不是文件更多。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">03</span>个人模型与单页任务偏好</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>类型</th><th>回答的问题</th><th>维护方式</th></tr></thead>
+            <tbody>
+              <tr><td>个人背景</td><td>我是谁、工作性质、职业形象</td><td>帮助理解语境，不直接当作写作规则</td></tr>
+              <tr><td>协作偏好</td><td>希望 Agent 怎样回答和合作</td><td>作为日常协作默认偏好</td></tr>
+              <tr><td>任务标准</td><td>某项工作做到什么效果才算好</td><td>一项工作只维护一份活文档</td></tr>
+              <tr><td>待确认观察</td><td>Agent 从行为和作品中推断的规律</td><td>未经确认不进入正式规则</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flow">
+          <div class="step">优秀作品<br>明确反馈</div><div class="arrow">→</div><div class="step">读取当前<br>任务文档</div><div class="arrow">→</div><div class="step">归纳共性<br>识别例外</div><div class="arrow">→</div><div class="step">必要确认</div><div class="arrow">→</div><div class="step">原地修订<br>清理失效规则</div>
+        </div>
+        <div class="callout"><span class="strong">个人偏好小而精：</span>不保存用于偏好学习的个人原始作品，不建立证据集合或日期版本，不让 Agent 自产内容自动成为新正例。</div>
+        <p class="small"><b>优先级：</b>当次明确指令 ＞ 具体任务标准 ＞ 全局协作偏好 ＞ 个人背景推断。</p>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">04</span>分层索引与共编规则</h3>
+        <div class="grid two">
+          <div class="card"><h4>按需读取</h4><div class="flow vertical"><div class="step">L0 · START 根路由</div><div class="arrow">→</div><div class="step">L1 · 领域与主题索引</div><div class="arrow">→</div><div class="step">L2 · 相关知识页面</div><div class="arrow">→</div><div class="step">L3 · 必要时才读 raw 原文</div></div></div>
+          <div class="card"><h4>共同编辑约定</h4><ul class="clean small"><li>先读后写，基于最新文件修改</li><li>原地演进，不建近义页面</li><li>尊重已确认规则</li><li>整合而非追加堆叠</li><li>事实、综合和推断分开</li><li>留下简短操作日志</li></ul></div>
+        </div>
+        <p class="small">索引的索引负责路由，全文搜索负责定位。数百页先用分层索引与全文搜索，规模增大后再增加机器目录、BM25 或混合检索。</p>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">05</span>运行闭环与权限</h3>
+        <div class="grid three">
+          <div class="card"><h4>Ingest / 入库</h4><p class="small">保存外部来源，创建来源摘要，更新相关概念和综合页。</p></div>
+          <div class="card"><h4>Learn / 学习</h4><p class="small">从明确要求和优秀作品中精修任务标准。</p></div>
+          <div class="card"><h4>Query / 查询</h4><p class="small">按索引读取最小上下文，有复用价值的成果才沉淀。</p></div>
+          <div class="card"><h4>Lint / 维护</h4><p class="small">结构检查与语义检查分开，结构合格不等于事实正确。</p></div>
+          <div class="card"><h4>Backup / 备份</h4><p class="small">私有 GitHub 只作备份，手动触发，不与问答绑定。</p></div>
+          <div class="card"><h4>Evolve / 进化</h4><p class="small">发现重复建页、漏索引和误推断后修订规则本身。</p></div>
+        </div>
+        <div class="callout gold"><span class="strong">边界：</span>可自动做检索、索引、格式和明确指令更新；推断出的个人偏好、重要合并删除、重大结论变化和超出受控区域的修改先确认。</div>
+      </section>
+      <div class="version-footer"><span>这是后续版本的基础，不是当前最新默认。</span><span>下一页：Skills 与全量备份</span></div>
+    </article>
+
+    <article class="version-panel" id="v1-1" role="tabpanel" aria-labelledby="tab-v1-1" hidden>
+      <div class="version-head">
+        <div class="version-meta"><span class="badge blue">2026-11-02</span><span class="badge">V1.1 · 历史方案</span></div>
+        <h2>中文 Skills 与整个工作区备份</h2>
+        <p>把常用工作流变成容易记忆的中文命令，并明确用户拖放文件的位置。备份范围从知识内容扩展为整个智脑工作区，包括本地配置目录。</p>
+      </div>
+
+      <section class="content-section">
+        <h3><span class="no">01</span>六个中文命令</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>命令</th><th>用途</th><th>输入</th></tr></thead>
+            <tbody>
+              <tr><td><code>/skill:整理资料</code></td><td>查重、归档外部资料并更新 Wiki</td><td>待整理文件、URL 或文件路径</td></tr>
+              <tr><td><code>/skill:查询智脑</code></td><td>分层索引与最小上下文查询</td><td>问题</td></tr>
+              <tr><td><code>/skill:学习偏好</code></td><td>原地精修一项工作的唯一任务文档</td><td>例如“写工作信息”＋当前作品</td></tr>
+              <tr><td><code>/skill:写工作信息</code></td><td>按当前任务标准创作</td><td>用途、读者、素材和要求</td></tr>
+              <tr><td><code>/skill:检查智脑</code></td><td>检查链接、索引、结构和内容健康</td><td>可选检查范围</td></tr>
+              <tr><td><code>/skill:备份智脑</code></td><td>立即执行整个工作区备份</td><td>显式调用即授权，不重复询问</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">Skills 位于 <code>.agents/skills/</code>，均设为仅显式调用；其他 Agent 可以读取对应的 <code>SKILL.md</code>。</p>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">02</span>文件入口</h3>
+        <div class="grid two">
+          <div class="card"><span class="tag">外部资料</span><h4>拖入 raw/待整理/</h4><p class="small">处理后移动到 raw 的相应主题目录，原文件内容保持不变。不能只生成孤立摘要。</p></div>
+          <div class="card"><span class="tag">个人偏好学习</span><h4>直接在对话中提供</h4><p class="small">优秀工作信息不拖入 raw，只提炼规则并更新写工作信息任务文档。</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">03</span>全量备份与自动执行 Skill</h3>
+        <div class="grid two">
+          <div class="card"><h4>备份范围</h4><ul class="clean small"><li>全部知识、规则、模板和脚本</li><li>全部中文 Skills</li><li>根目录已有文件</li><li>.obsidian/ 和 .smart-env/</li><li>只有 .git/ 内部元数据除外</li></ul></div>
+          <div class="card"><h4>执行方式</h4><p class="small">备份 Skill 使用脚本的 AutoConfirm 模式，调用后实际执行，不是只向用户展示命令。直接运行脚本仍保留人工确认。</p><p class="small">目标仓库必须私有；保留敏感文件名、超大文件、远端不一致和禁止强推等检查。</p></div>
+        </div>
+        <div class="callout rose"><span class="strong">隐私边界：</span>配置目录也可能含个人或插件配置，整个工作区只能备份到私有 GitHub。普通对话不自动上传。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">04</span>落地结构与加载</h3>
+        <pre>智脑/
+├─ README.md                  使用卡片与中文命令
+├─ AGENTS.md                  共编规则
+├─ START.md                   根路由
+├─ .agents/skills/            六个中文 Skills
+├─ raw/待整理/                外部文件入口
+├─ wiki/                      编译知识
+├─ me/                        个人模型
+├─ system/                    工作流、模板、索引和备份
+└─ log.md                     简短操作日志</pre>
+        <p class="small">在 Kimi Code 中打开智脑项目后，通过 /reload 或新会话加载 Skills。本地 Git 用于项目识别，不等于已经备份。</p>
+      </section>
+      <div class="version-footer"><span>这一阶段解决“怎么好用、怎么备份”。</span><span>下一页：对话级自动循环</span></div>
+    </article>
+
+    <article class="version-panel" id="v1-2" role="tabpanel" aria-labelledby="tab-v1-2" hidden>
+      <div class="version-head">
+        <div class="version-meta"><span class="badge blue">2026-11-02</span><span class="badge">V1.2 · 历史方案</span></div>
+        <h2>对话级自动循环：每次对话都带着你和相关知识</h2>
+        <p>把个人模型读取、知识检索和知识沉淀从手动 Skill 扩展为智脑项目内的默认协议。重点不是全部读入，而是“总览必读、详情按需、当前任务必读”。</p>
+      </div>
+
+      <section class="content-section">
+        <h3><span class="no">01</span>默认对话循环</h3>
+        <div class="flow">
+          <div class="step">读取个人模型总览</div><div class="arrow">→</div><div class="step">通过索引轻量检索</div><div class="arrow">→</div><div class="step">回答或创作</div><div class="arrow">→</div><div class="step">判断是否有复用价值</div><div class="arrow">→</div><div class="step">去重并写回</div>
+        </div>
+        <div class="callout"><span class="strong">同一话题不重复启动：</span>话题明显变化时针对新主题重新检索；没有相关知识就直接回答，不强行凑引用。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">02</span>个人模型总览与详情</h3>
+        <div class="grid three">
+          <div class="card"><h4>me/_index.md</h4><p class="small">每个新对话必读。只放身份背景摘要、稳定协作偏好、任务标准清单和详情链接。</p></div>
+          <div class="card"><h4>个人背景与协作详情</h4><p class="small">profile.md 与 collaboration.md 只在需要完整信息时展开。</p></div>
+          <div class="card"><h4>任务标准</h4><p class="small">执行哪项工作就读取哪份任务文档，不加载所有无关任务标准。</p></div>
+        </div>
+        <p class="small">个人模型总览必须保持精简，不能变成第二份完整档案。修改详情后同步检查总览摘要。</p>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">03</span>轻量检索</h3>
+        <div class="grid two">
+          <div class="card"><h4>启动时</h4><ul class="clean small"><li>读取 AGENTS、START 和个人模型总览</li><li>判断问题类型和关键词</li><li>查看相关领域索引和元数据</li><li>有候选结果才读取正文或段落</li></ul></div>
+          <div class="card"><h4>停止与展开</h4><ul class="clean small"><li>现有信息足够就停止扩大检索</li><li>事实核验或 Wiki 不足时才读 raw</li><li>只有实际使用页面才说明来源</li><li>检索不到时不假装知识库有答案</li></ul></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">04</span>选择性自动沉淀</h3>
+        <div class="grid two">
+          <div class="card"><span class="tag">值得沉淀</span><ul class="clean small"><li>用户明确要求记住的内容</li><li>稳定的个人背景或偏好</li><li>可复用的方法、决策和比较</li><li>解决问题的经验与例外</li><li>有来源支持的新知识</li></ul></div>
+          <div class="card"><span class="tag">不应沉淀</span><ul class="clean small"><li>寒暄、重复内容和一次性细节</li><li>未核实事实和 Agent 臆测</li><li>密码、凭据和偶然敏感信息</li><li>完整聊天记录</li><li>没有新信息的日常问答</li></ul></div>
+        </div>
+        <p class="small">采用“卡片化提炼、页面化沉淀”：结论、适用条件、来源性质和相关链接可以保持原子化，但优先合并进已有页面，不逢结论就新建文件。</p>
+        <div class="callout gold"><span class="strong">个人推断仍需确认：</span>个人背景、协作偏好和任务规则的推断进入各自页面的待确认区；Agent 自产作品不能自动成为用户正例。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">05</span>触发时机</h3>
+        <p>每次回答完成前、话题转换时、长对话出现重要结论时进行轻量判断。不能依赖“关闭窗口”触发，因为 Agent 未必能收到会话结束事件。没有值得保存的内容时不写入，也不向用户额外汇报。</p>
+      </section>
+      <div class="version-footer"><span>这一阶段让智脑项目内的对话自动生长。</span><span>下一页：全局无感智脑</span></div>
+    </article>
+
+    <article class="version-panel" id="v1-3" role="tabpanel" aria-labelledby="tab-v1-3" hidden>
+      <div class="version-head">
+        <div class="version-meta"><span class="badge blue">2026-11-02</span><span class="badge">V1.3 · 历史方案</span></div>
+        <h2>全局无感智脑：每个对话默认有大脑</h2>
+        <p>选择“默认自动使用智脑”，而不是只有输入特定命令才调用。全局 Kimi Code 规则只负责找到智脑；完整规则、个人模型和知识仍只在智脑中维护一份。</p>
+      </div>
+
+      <section class="content-section">
+        <h3><span class="no">01</span>为什么选择默认无感</h3>
+        <div class="split">
+          <div class="card"><span class="tag">默认使用智脑</span><h4>持续个人认知层</h4><p class="small">每次对话自然读取你的总览和相关知识，逐渐理解你的思路，并在有价值时整理知识。不要求你记得输入命令。</p></div>
+          <div class="approx">＞<span>符合当前目标</span></div>
+          <div class="card"><span class="tag">只有命令才使用</span><h4>按需检索工具</h4><p class="small">只有明确说“结合文档”才参与，容易错过隐含偏好、上下文和可沉淀内容，不符合长期协作者的目标。</p></div>
+        </div>
+        <div class="callout"><span class="strong">默认自动＋显式控制：</span>选项一作为默认，选项二保留为加强检索或特殊控制的方式，而不是互相排斥。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">02</span>全局入口与项目章程</h3>
+        <div class="flow">
+          <div class="step">任意项目中的<br>Kimi Code 新对话</div><div class="arrow">→</div><div class="step">用户配置目录下的<br>全局 AGENTS.md 轻量入口</div><div class="arrow">→</div><div class="step">智脑目录下的 AGENTS.md<br>完整智脑规则</div><div class="arrow">→</div><div class="step">个人模型总览<br>相关索引与页面</div>
+        </div>
+        <div class="grid two" style="margin-top:14px;">
+          <div class="card"><h4>全局文件只做什么</h4><ul class="clean small"><li>指出智脑位置</li><li>要求遵循默认读取、检索和沉淀协议</li><li>路径不可用时明确说明</li><li>普通对话不得触发备份</li></ul></div>
+          <div class="card"><h4>全局文件不做什么</h4><ul class="clean small"><li>不复制整套宪法或个人资料</li><li>不保存完整知识库</li><li>不替代项目自身技术规则</li><li>不使用 SYSTEM.md 替换系统提示词</li></ul></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">03</span>默认无感，但保留自然语言控制</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>用户表达</th><th>智脑行为</th></tr></thead>
+            <tbody>
+              <tr><td>正常提问或工作</td><td>读取个人模型总览，轻量检索相关知识</td></tr>
+              <tr><td>“深入结合一下智脑”</td><td>扩大检索范围，读取更多相关页面</td></tr>
+              <tr><td>“这次不用智脑”</td><td>本次不读取、不写入智脑</td></tr>
+              <tr><td>“这个不要记”</td><td>当前内容不沉淀</td></tr>
+              <tr><td>“记住这个”或“以后照这个做”</td><td>记录到合适的个人模型或知识页面</td></tr>
+              <tr><td>“继续上次的工作”</td><td>在建议架构中读取对应当前工作交接</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">这些控制语句是已确认的产品思路；是否已写入具体规则文件，应以实际实施记录为准。</p>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">04</span>无感不等于无边界</h3>
+        <div class="grid three">
+          <div class="card"><h4>每次自动</h4><p class="small">个人模型总览、相关索引检索、有复用价值知识的判断。</p></div>
+          <div class="card"><h4>仍然确认</h4><p class="small">个人推断、推翻已确认规则、重要合并删除和重大结论变化。</p></div>
+          <div class="card"><h4>始终不自动</h4><p class="small">完整聊天保存、敏感信息沉淀、全库读取、GitHub 备份和公开分享。</p></div>
+        </div>
+        <div class="callout gold"><span class="strong">生效范围：</span>全局入口用于所有 Kimi Code 工作区，但实际文件读取仍需 Agent 按规则执行。新会话是否按预期启动，应在真实新对话中验证。</div>
+      </section>
+      <div class="version-footer"><span>这是当前选择的默认交互方式。</span><span>下一页：工作交接与 Agent 能力网络</span></div>
+    </article>
+
+    <article class="version-panel" id="v2-0" role="tabpanel" aria-labelledby="tab-v2-0">
+      <div class="version-head">
+        <div class="version-meta"><span class="badge blue">2026-11-02</span><span class="badge">V2.0 · 当前默认</span></div>
+        <h2>当前工作交接＋Agent 能力网络＋中文化</h2>
+        <p>参考淋雨家工作台的总纲与记忆机制，在保留现有知识和个人模型的前提下，补上“这次工作做到哪里”和“每个 Agent 能怎样执行”两层能力。结构与规则已经实施，真实工作交接、其他 Agent 共编和实际备份仍待运行验证。</p>
+      </div>
+
+      <section class="content-section">
+        <h3><span class="no">01</span>当前架构与建议架构</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>能力</th><th>当前架构</th><th>建议架构</th><th>变化</th></tr></thead>
+            <tbody>
+              <tr><td>外部知识与个人模型</td><td>已有 Wiki、总览和任务标准</td><td>继续原地生长，明确详情页为真源</td><td><span class="status yes">保留加强</span></td></tr>
+              <tr><td>对话知识沉淀</td><td>自动判断复用价值并去重</td><td>保持，不保存完整聊天</td><td><span class="status yes">保留</span></td></tr>
+              <tr><td>进行中的工作</td><td><span class="status no">缺少专门层</span></td><td>work 索引＋每项工作一份最新交接</td><td><span class="status partial">新增</span></td></tr>
+              <tr><td>不同 Agent 的 Skill</td><td>共享中文 Skills，未登记能力差异</td><td>共享任务契约＋Agent 原生 Skill＋能力登记</td><td><span class="status partial">新增</span></td></tr>
+              <tr><td>完成与承接</td><td>简短操作日志</td><td>结论、证据、产物路径和下一步进入交接</td><td><span class="status partial">加强</span></td></tr>
+              <tr><td>必读文件体量</td><td>强调精简</td><td>软上限提醒＋“30 秒能否接手”验收</td><td><span class="status partial">加强</span></td></tr>
+              <tr><td>修改权与备份</td><td>平等共编＋全量私有备份</td><td>保持不变</td><td><span class="status yes">保留</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><span class="strong">四种内容不能混：</span>任务标准回答“怎样做好”，当前交接回答“做到哪里”，知识页面回答“知道什么”，操作日志回答“过去谁改过什么”。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">02</span>新运行拓扑</h3>
+        <div class="flow vertical">
+          <div class="node dark"><b>你提出任务</b><span>全局入口与共同规则</span></div>
+          <div class="arrow">→</div>
+          <div class="node"><b>读取最小启动上下文</b><span>个人模型总览 · 相关索引 · 当前工作索引</span></div>
+          <div class="arrow">→</div>
+          <div class="node green"><b>共享任务契约＋Agent 能力登记</b><span>输入、目标、权限、产物、验收 · 当前 Agent 的原生能力</span></div>
+        </div>
+        <div class="node-row" style="margin-top:12px;">
+          <div class="node"><b>Kimi Code</b><span>自己的文件、浏览器、终端与 Skills</span></div>
+          <div class="node"><b>DSH / Kimi</b><span>自己的 DSH Skills、插件与 MCP</span></div>
+          <div class="node"><b>DSH / DeepSeek</b><span>自己的模型能力与宿主技能</span></div>
+        </div>
+        <div class="flow" style="margin-top:12px;">
+          <div class="step">产出结论、文件、路径和验证证据</div><div class="arrow">→</div><div class="step">写回当前交接、知识页面、个人模型和简短日志</div>
+        </div>
+        <div class="callout"><span class="strong">没有永久主 Agent：</span>执行者只是本次任务的临时 owner。其他 Agent 通过共享交接和文件产物承接。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">03</span>两个建议新增的层</h3>
+        <div class="grid two">
+          <div class="card"><span class="tag">WORK / 当前工作</span><h4>一项进行中的工作，一份最新交接</h4><ul class="clean small"><li>当前目标</li><li>本轮已完成及产物路径</li><li>当前状态</li><li>下一步</li><li>卡点与等待对象</li><li>相关任务标准和知识链接</li></ul><p class="small">覆盖更新，不追加每轮进度。完成后从活动索引移除。</p></div>
+          <div class="card"><span class="tag">AGENTS / 能力登记</span><h4>登记能力与入口，不复制 Skill 正文</h4><ul class="clean small"><li>Agent 与所在宿主</li><li>原生 Skill 目录或入口</li><li>擅长与不擅长的任务</li><li>中文任务到原生 Skill 的映射</li><li>失败后的替代方式</li><li>最近实际验证内容</li></ul><p class="small">Skill 是执行方法，可以不同；共享资产必须一致。</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">04</span>中文命名映射</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>当前名称</th><th>建议中文名称</th><th>备注</th></tr></thead>
+            <tbody>
+              <tr><td><code>raw / wiki / me / system</code></td><td><code>原始资料 / 知识库 / 个人模型 / 运行机制</code></td><td>四个核心目录</td></tr>
+              <tr><td><code>work</code>（新增）</td><td><code>当前工作</code></td><td>交接索引与当前工作页面</td></tr>
+              <tr><td><code>sources / concepts / entities / syntheses</code></td><td><code>来源摘要 / 概念知识 / 对象档案 / 综合分析</code></td><td>四类知识页面</td></tr>
+              <tr><td><code>workflows / templates / indexes / backup</code></td><td><code>工作流程 / 模板 / 索引 / 备份</code></td><td>运行机制子目录</td></tr>
+              <tr><td><code>profile.md / collaboration.md</code></td><td><code>个人背景.md / 协作偏好.md</code></td><td>个人模型详情</td></tr>
+              <tr><td><code>tasks / START.md / _index.md / log.md</code></td><td><code>任务标准 / 从这里开始.md / _索引.md / 操作日志.md</code></td><td>人的阅读入口</td></tr>
+              <tr><td><code>Backup-ToGitHub.ps1</code></td><td><code>备份智脑.ps1</code></td><td>同步更新 Skill 和说明</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid two" style="margin-top:14px;">
+          <div class="card"><h4>建议保留的机器约定</h4><p class="small">AGENTS.md、README.md、SKILL.md、.agents/skills/、.git、.obsidian、.smart-env、.gitignore，以及 Skill frontmatter 和必要 YAML 字段。</p></div>
+          <div class="card"><h4>迁移方式</h4><p class="small">先冻结映射表，再一次性迁移目录、内部链接、Skills、脚本和 README，最后做全库链接检查。不要边使用边零散改名。</p></div>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">05</span>宪法级与全局 AGENTS.md</h3>
+        <div class="split">
+          <div class="card"><span class="tag">视频中的 L0 宪法</span><h4>一套治理地位</h4><ul class="clean small"><li>约束整个工作台</li><li>只放最高优先级铁律</li><li>只有用户有权修改</li><li>修改需要版本化</li><li>细则下沉</li></ul></div>
+          <div class="approx">≈<span>不是完全等同</span></div>
+          <div class="card"><span class="tag">Kimi Code 全局 AGENTS.md</span><h4>一个全局指令入口</h4><ul class="clean small"><li>影响所有项目工作区</li><li>内容作为指令注入提示词</li><li>不自动提供权限分级</li><li>不自动提供版本化</li><li>不是 SYSTEM.md</li></ul></div>
+        </div>
+        <div class="callout gold"><span class="strong">当前映射：</span>全局 AGENTS.md 是宪法入口，智脑项目 AGENTS.md 是运行章程，工作流和 Skills 是实施细则。宪法级来自权威性、范围和修改规则，不来自文件名。</div>
+      </section>
+
+      <section class="content-section">
+        <h3><span class="no">06</span>已完成的实施与未采用项</h3>
+        <div class="flow">
+          <div class="step">确认新架构</div><div class="arrow">→</div><div class="step">建立当前工作交接</div><div class="arrow">→</div><div class="step">登记真实 Agent 能力</div><div class="arrow">→</div><div class="step">完成中文化与链接验证</div>
+        </div>
+        <p class="small">不照搬场景记忆互不修改、长期记忆永远只追加、工具自动生成用户画像、DSH 会话 ID 绑定、完整通知派单系统和额外聊天全文归档。</p>
+        <div class="callout"><span class="strong">已实施：</span>当前工作层、Agent 能力登记和中文目录迁移已完成。只有 Kimi Code 实际接入，其他 Agent 尚未使用；实际 GitHub 备份未执行。</div>
+      </section>
+      <div class="version-footer"><span>这是当前已实施的默认架构。</span><span>后续重点是新会话、真实交接和跨 Agent 验证。</span></div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="wrap">方法参考：<a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy LLM Wiki</a> · <a href="https://github.com/mashanglinyu/luanyujia-workbench">淋雨家的工作台</a> · <a href="https://www.kimi.com/code/docs/en/kimi-code-cli/customization/agents.html">Kimi Code 指令与 Agents</a>。本页保存架构演进思路，不代替智脑内的真实实施记录。</div>
+  </footer>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll('.version-tab'));
+    const panels = Array.from(document.querySelectorAll('.version-panel'));
+
+    function selectVersion(id, updateHash = true) {
+      const selected = tabs.find(tab => tab.dataset.target === id);
+      if (!selected) return;
+      tabs.forEach(tab => {
+        const active = tab === selected;
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+      });
+      panels.forEach(panel => {
+        panel.hidden = panel.id !== id;
+      });
+      if (updateHash) history.replaceState(null, '', '#' + id);
+      document.title = selected.dataset.short + '｜智脑架构时间线';
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => selectVersion(tab.dataset.target));
+      tab.addEventListener('keydown', event => {
+        let nextIndex = null;
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+        if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+        if (nextIndex !== null) {
+          event.preventDefault();
+          tabs[nextIndex].focus();
+          selectVersion(tabs[nextIndex].dataset.target);
+        }
+      });
+    });
+
+    const initial = location.hash.slice(1);
+    selectVersion(panels.some(panel => panel.id === initial) ? initial : 'v2-0', false);
+  </script>
+</body>
+</html>
